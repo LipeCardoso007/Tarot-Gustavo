@@ -75,8 +75,14 @@ const resetBtn = document.getElementById("resetBtn");
 const topicHint = document.getElementById("topicHint");
 const chips = document.querySelectorAll(".chip");
 
+const FLIP_DURATION_MS = 900;
+const SOUND_ENABLED = true;
+
 let currentTopic = null;
 let currentCard = null;
+let flipTimer = null;
+let doneTimer = null;
+let audioCtx = null;
 
 function pickCard() {
   const idx = Math.floor(Math.random() * cards.length);
@@ -94,11 +100,28 @@ function updateCardText() {
 }
 
 function flipCard() {
+  if (!currentCard) return;
+  card.classList.remove("flip-anim");
+  card.classList.remove("done");
+  void card.offsetWidth;
+  card.classList.add("flip-anim");
   card.classList.add("flipped");
+  if (flipTimer) clearTimeout(flipTimer);
+  if (doneTimer) clearTimeout(doneTimer);
+  flipTimer = setTimeout(() => {
+    card.classList.remove("flip-anim");
+  }, FLIP_DURATION_MS);
+  doneTimer = setTimeout(() => {
+    card.classList.add("done");
+  }, FLIP_DURATION_MS);
+  if (SOUND_ENABLED) {
+    playFlipSound();
+  }
 }
 
 function resetCard() {
   card.classList.remove("flipped");
+  card.classList.remove("done");
 }
 
 card.addEventListener("click", () => {
@@ -128,3 +151,29 @@ chips.forEach((chip) => {
 });
 
 pickCard();
+
+function playFlipSound() {
+  if (!window.AudioContext) return;
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(520, now);
+  osc.frequency.exponentialRampToValueAtTime(260, now + 0.22);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.035, now + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.3);
+}
