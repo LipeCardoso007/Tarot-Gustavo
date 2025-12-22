@@ -1,0 +1,168 @@
+﻿<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Segredos do tarô</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="noise"></div>
+
+  <main class="wrap">
+    <header class="hero">
+      <div class="brand-mark" aria-hidden="true">
+        <span class="brand-sigil"></span>
+      </div>
+      <p class="eyebrow">Oráculo do Dia</p>
+      <h1>Segredos do tarô</h1>
+      <p class="subtitle">Uma carta, uma mensagem. Respire e toque em revelar.</p>
+      <p class="byline">por Equipe Segredos do tarô</p>
+    </header>
+
+    <section class="cta">
+      <p>Quer uma leitura personalizada? Fale conosco agora mesmo.</p>
+      <a class="cta-btn" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+        Consultar agora
+      </a>
+    </section>
+
+    <div class="ornament divider" aria-hidden="true"></div>
+
+    <section class="card-area">
+      <div class="card" id="card">
+        <div class="card-face card-back">
+          <div class="sigil"></div>
+          <p>Clique para revelar</p>
+        </div>
+        <div class="card-face card-front" id="cardFront">
+          <h2 id="cardName">A Carta</h2>
+          <p id="cardMeaning">Mensagem do tarô.</p>
+          <span class="tag" id="cardTag">Luz</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="drawBtn">Tirar nova carta</button>
+        <button id="resetBtn" class="ghost">Virar de novo</button>
+      </div>
+    </section>
+
+    <section class="intent">
+      <h3>Intenção rápida</h3>
+      <div class="chips">
+        <button class="chip" data-topic="amor">Amor</button>
+        <button class="chip" data-topic="trabalho">Trabalho</button>
+        <button class="chip" data-topic="caminho">Caminho</button>
+        <button class="chip" data-topic="energia">Energia</button>
+      </div>
+      <p id="topicHint" class="hint">Escolha um tema para guiar a mensagem.</p>
+    </section>
+
+    <div class="ornament divider" aria-hidden="true"></div>
+
+    <section class="offerings">
+      <div class="offerings-group">
+        <h2 class="offerings-title">Financeiro</h2>
+        <div class="price-list">
+          <article class="price-card">
+            <h3>Consulta Financeira</h3>
+            <p class="price">R$ 120,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+        </div>
+      </div>
+
+      <div class="offerings-group">
+        <h2 class="offerings-title">Tiragens Amplas</h2>
+        <div class="price-list">
+          <article class="price-card">
+            <h3>Cruz de Celta</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Para onde estou indo?</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Roda da vida</h3>
+            <p class="price">R$ 20,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Pergunta objetiva</h3>
+            <p class="price">R$ 5,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+        </div>
+      </div>
+
+      <div class="offerings-group">
+        <h2 class="offerings-title">Feitiços</h2>
+        <div class="price-list">
+          <article class="price-card">
+            <h3>Adoçamento tradicional</h3>
+            <p class="price">R$ 50,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Adoçamento com amarração</h3>
+            <p class="price">R$ 140,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Corte de laços</h3>
+            <p class="price">R$ 80,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Proteção com Hécate</h3>
+            <p class="price">R$ 80,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+        </div>
+      </div>
+
+      <div class="offerings-group">
+        <h2 class="offerings-title">Tiragens Amorosas</h2>
+        <div class="price-list">
+          <article class="price-card">
+            <h3>Templo do diabo</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Tiragem sobre ex</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Templo de Afrodite</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Vida amorosa completa</h3>
+            <p class="price">R$ 20,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+          <article class="price-card">
+            <h3>Vale a pena insistir?</h3>
+            <p class="price">R$ 10,00</p>
+            <a class="price-cta" href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">Consultar</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Use como reflexão. Não substitui aconselhamento profissional.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
