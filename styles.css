@@ -324,6 +324,15 @@ button.ghost {
   margin-bottom: 18px;
 }
 
+.offerings-desc {
+  margin: 0 auto 18px;
+  max-width: 640px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
 .price-list {
   display: flex;
   flex-direction: column;
@@ -371,6 +380,13 @@ button.ghost {
   border-radius: 10px;
 }
 
+.price-desc {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .price {
   margin-top: 10px;
   font-weight: 600;
@@ -385,6 +401,13 @@ button.ghost {
   padding: 16px;
   color: var(--muted);
   z-index: 1;
+  width: 100%;
+}
+
+.foot p {
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.5;
 }
 
 @media (max-width: 600px) {
@@ -398,6 +421,14 @@ button.ghost {
 
   .price-card {
     padding: 14px 16px;
+  }
+
+  .foot {
+    padding: 20px 18px 28px;
+  }
+
+  .foot p {
+    font-size: 0.95rem;
   }
 }
 
@@ -425,6 +456,10 @@ button.ghost {
   .price-card h3 {
     font-size: 0.98rem;
   }
+
+  .price-desc {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 420px) {
@@ -442,5 +477,9 @@ button.ghost {
 
   .price {
     font-size: 0.95rem;
+  }
+
+  .price-desc {
+    font-size: 0.88rem;
   }
 }
