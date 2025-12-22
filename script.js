@@ -74,15 +74,16 @@ const drawBtn = document.getElementById("drawBtn");
 const resetBtn = document.getElementById("resetBtn");
 const topicHint = document.getElementById("topicHint");
 const chips = document.querySelectorAll(".chip");
+const soundToggle = document.getElementById("soundToggle");
 
 const FLIP_DURATION_MS = 900;
-const SOUND_ENABLED = true;
 
 let currentTopic = null;
 let currentCard = null;
 let flipTimer = null;
 let doneTimer = null;
 let audioCtx = null;
+let soundEnabled = true;
 
 function pickCard() {
   const idx = Math.floor(Math.random() * cards.length);
@@ -106,6 +107,9 @@ function flipCard() {
   void card.offsetWidth;
   card.classList.add("flip-anim");
   card.classList.add("flipped");
+  if (navigator.vibrate) {
+    navigator.vibrate(18);
+  }
   if (flipTimer) clearTimeout(flipTimer);
   if (doneTimer) clearTimeout(doneTimer);
   flipTimer = setTimeout(() => {
@@ -114,7 +118,7 @@ function flipCard() {
   doneTimer = setTimeout(() => {
     card.classList.add("done");
   }, FLIP_DURATION_MS);
-  if (SOUND_ENABLED) {
+  if (soundEnabled) {
     playFlipSound();
   }
 }
@@ -151,6 +155,14 @@ chips.forEach((chip) => {
 });
 
 pickCard();
+updateSoundToggle();
+
+if (soundToggle) {
+  soundToggle.addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    updateSoundToggle();
+  });
+}
 
 function playFlipSound() {
   if (!window.AudioContext) return;
@@ -176,4 +188,10 @@ function playFlipSound() {
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(now);
   osc.stop(now + 0.3);
+}
+
+function updateSoundToggle() {
+  if (!soundToggle) return;
+  soundToggle.setAttribute("aria-pressed", soundEnabled ? "true" : "false");
+  soundToggle.textContent = soundEnabled ? "Som: ligado" : "Som: desligado";
 }
