@@ -126,9 +126,20 @@ function flipCard() {
 function resetCard() {
   card.classList.remove("flipped");
   card.classList.remove("done");
+  card.classList.remove("flip-anim");
+  if (flipTimer) clearTimeout(flipTimer);
+  if (doneTimer) clearTimeout(doneTimer);
 }
 
 card.addEventListener("click", () => {
+  if (card.classList.contains("flipped")) {
+    resetCard();
+    pickCard();
+    setTimeout(() => {
+      flipCard();
+    }, 120);
+    return;
+  }
   if (!currentCard) {
     pickCard();
   }
