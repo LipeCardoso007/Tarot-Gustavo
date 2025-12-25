@@ -39,6 +39,11 @@
       background: rgba(215, 180, 106, 0.06);
     }
 
+    .admin-table tbody tr {
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
     .admin-table .status-pill {
       display: inline-flex;
       align-items: center;
@@ -343,6 +348,14 @@
         color: var(--muted);
         margin-bottom: 0;
       }
+
+      .chart-card {
+        padding: 12px;
+      }
+
+      #salesChart {
+        height: 160px;
+      }
     }
   </style>
 </head>
@@ -610,7 +623,7 @@
       });
 
       context.fillStyle = "rgba(215, 180, 106, 0.9)";
-      context.font = "11px serif";
+      context.font = "11px Georgia, 'Times New Roman', serif";
       context.textAlign = "center";
       context.textBaseline = "top";
       days.forEach((day, index) => {
@@ -702,7 +715,7 @@
         const actionBtn = paid
           ? "<button type=\"button\" class=\"ghost parcel-action-btn\" disabled>Pago</button>"
           : "<button type=\"button\" class=\"ghost parcel-action-btn\" data-id=\"" + entry.id + "\" data-index=\"" + index + "\">Marcar como paga</button>";
-        return "<tr><td>" + (index + 1) + "ª</td><td>R$ " + formatMoneyFromCents(amount) + "</td><td>" + statusCell + "</td><td>" + actionBtn + "</td></tr>";
+        return "<tr><td>" + (index + 1) + "&ordf;</td><td>R$ " + formatMoneyFromCents(amount) + "</td><td>" + statusCell + "</td><td>" + actionBtn + "</td></tr>";
       }).join("");
       parcelDetails.innerHTML = "" +
         "<div class=\"parcel-summary\">" +
