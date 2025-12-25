@@ -39,17 +39,6 @@
       background: rgba(215, 180, 106, 0.06);
     }
 
-    .client-link {
-      background: none;
-      border: none;
-      color: var(--accent);
-      font: inherit;
-      padding: 0;
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
     .admin-table .status-pill {
       display: inline-flex;
       align-items: center;
@@ -269,6 +258,33 @@
       padding: 6px 10px;
     }
 
+    .chart-card {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(215, 180, 106, 0.2);
+      background: rgba(18, 14, 26, 0.7);
+    }
+
+    .chart-title {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .chart-note {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    #salesChart {
+      width: 100%;
+      height: 180px;
+      display: block;
+    }
+
     @media (max-width: 720px) {
       .admin-table {
         font-size: 0.85rem;
@@ -350,6 +366,14 @@
         <h1>P&#225;gina do administrador</h1>
         <p class="subtitle">Cadastre clientes e acompanhe parcelas.</p>
       </header>
+
+      <section class="admin-panel">
+        <div class="chart-card">
+          <h2 class="chart-title">Grafico de vendas</h2>
+          <p class="chart-note">Total vendido por dia (ultimos 7 dias, incluindo hoje).</p>
+          <canvas id="salesChart" width="720" height="180" aria-label="Grafico de vendas por dia" role="img"></canvas>
+        </div>
+      </section>
 
       <section class="intent admin-panel">
         <h3>Adicionar cliente</h3>
@@ -479,6 +503,7 @@
     const parcelModal = document.getElementById("parcelModal");
     const parcelDetails = document.getElementById("parcelDetails");
     const parcelClose = document.getElementById("parcelClose");
+    const salesChart = document.getElementById("salesChart");
     let entries = [];
     let toastTimer = null;
     let pendingPaidId = null;
@@ -503,6 +528,98 @@
       return integer.toString() + "," + decimals;
     }
 
+    function getDayKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return year + "-" + month + "-" + day;
+    }
+
+    function getDayLabel(date) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      return day + "/" + month;
+    }
+
+    function getLastDays(count) {
+      const days = [];
+      const today = new Date();
+      for (let i = count - 1; i >= 0; i -= 1) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        days.push(date);
+      }
+      return days;
+    }
+
+    function getSalesTotals(days) {
+      const totals = {};
+      days.forEach((day) => {
+        totals[getDayKey(day)] = 0;
+      });
+      entries.forEach((entry) => {
+        if (!entry.pago) return;
+        const stamp = typeof entry.paidAt === "number" ? entry.paidAt : entry.createdAt;
+        const date = new Date(stamp || Date.now());
+        const key = getDayKey(date);
+        if (Object.prototype.hasOwnProperty.call(totals, key)) {
+          totals[key] += entry.valorCents || 0;
+        }
+      });
+      return days.map((day) => totals[getDayKey(day)] || 0);
+    }
+
+    function renderSalesChart() {
+      if (!salesChart) return;
+      const context = salesChart.getContext("2d");
+      if (!context) return;
+      const width = salesChart.clientWidth;
+      const height = salesChart.clientHeight;
+      if (!width || !height) return;
+      const ratio = window.devicePixelRatio || 1;
+      salesChart.width = width * ratio;
+      salesChart.height = height * ratio;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+
+      const days = getLastDays(7);
+      const totals = getSalesTotals(days);
+      const maxValue = Math.max(...totals, 1);
+      const padding = { top: 12, right: 10, bottom: 26, left: 36 };
+      const plotWidth = width - padding.left - padding.right;
+      const plotHeight = height - padding.top - padding.bottom;
+      const barSlot = plotWidth / totals.length;
+      const barWidth = barSlot * 0.6;
+
+      context.strokeStyle = "rgba(215, 180, 106, 0.2)";
+      context.lineWidth = 1;
+      for (let i = 0; i <= 2; i += 1) {
+        const y = padding.top + (plotHeight / 2) * i;
+        context.beginPath();
+        context.moveTo(padding.left, y);
+        context.lineTo(width - padding.right, y);
+        context.stroke();
+      }
+
+      totals.forEach((value, index) => {
+        const barHeight = (value / maxValue) * plotHeight;
+        const x = padding.left + index * barSlot + (barSlot - barWidth) / 2;
+        const y = padding.top + (plotHeight - barHeight);
+        context.fillStyle = "rgba(215, 180, 106, 0.8)";
+        context.fillRect(x, y, barWidth, barHeight);
+      });
+
+      context.fillStyle = "rgba(215, 180, 106, 0.9)";
+      context.font = "11px serif";
+      context.textAlign = "center";
+      context.textBaseline = "top";
+      days.forEach((day, index) => {
+        const label = getDayLabel(day);
+        const x = padding.left + index * barSlot + barSlot / 2;
+        context.fillText(label, x, height - padding.bottom + 6);
+      });
+    }
+
     function loadEntries() {
       const stored = localStorage.getItem("adminClients");
       entries = stored ? JSON.parse(stored) : [];
@@ -510,9 +627,17 @@
         if (typeof entry.valorCents !== "number") {
           entry.valorCents = parseMoneyToCents(entry.valor || "");
         }
+        if (typeof entry.createdAt !== "number") {
+          entry.createdAt = Date.now();
+        }
         const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
-        if (!Array.isArray(entry.parcelPaid) || entry.parcelPaid.length !== parcelCount) {
+        if (parcelCount === 1) {
+          entry.parcelPaid = [true];
+        } else if (!Array.isArray(entry.parcelPaid) || entry.parcelPaid.length !== parcelCount) {
           entry.parcelPaid = new Array(parcelCount).fill(false);
+        }
+        if (entry.pago && typeof entry.paidAt !== "number") {
+          entry.paidAt = entry.createdAt;
         }
       });
       renderEntries();
@@ -520,15 +645,14 @@
 
     function appendRow(entry) {
       const row = document.createElement("tr");
+      row.setAttribute("data-id", entry.id);
       if (entry.pago) {
         row.classList.add("is-paid");
       }
       const statusLabel = entry.pago ? "Pago" : "Pendente";
       const actionLabel = entry.pago ? "Pago" : "Marcar como finalizado";
       const canFinalize = allParcelsPaid(entry);
-      row.innerHTML = "<td data-label=\"Cliente\">" +
-        "<button type=\"button\" class=\"client-link\" data-id=\"" + entry.id + "\">" +
-        escapeHtml(entry.cliente) + "</button></td>" +
+      row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
         "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>" +
@@ -545,6 +669,10 @@
     }
 
     function allParcelsPaid(entry) {
+      const count = Math.max(1, parseInt(entry.parcelas, 10) || 1);
+      if (count === 1) {
+        return true;
+      }
       return Array.isArray(entry.parcelPaid) && entry.parcelPaid.every((paid) => paid === true);
     }
 
@@ -563,6 +691,10 @@
       if (!parcelModal || !parcelDetails) return;
       const entry = entries.find((item) => item.id === entryId);
       if (!entry) return;
+      const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
+      if (parcelCount === 1) {
+        return;
+      }
       const schedule = buildParcelSchedule(entry.valorCents, entry.parcelas);
       const rows = schedule.map((amount, index) => {
         const paid = entry.parcelPaid && entry.parcelPaid[index];
@@ -635,6 +767,7 @@
       entries.forEach((entry) => {
         appendRow(entry);
       });
+      renderSalesChart();
     }
 
     if (form) {
@@ -651,6 +784,7 @@
           return;
         }
 
+        const parcelCount = Math.max(1, parseInt(parcelas, 10) || 1);
         const entry = {
           id: Date.now().toString(),
           cliente,
@@ -659,7 +793,8 @@
           valorCents: parseMoneyToCents(valor),
           pagamento,
           pagamentoLabel,
-          parcelPaid: new Array(Math.max(1, parseInt(parcelas, 10) || 1)).fill(false),
+          parcelPaid: parcelCount === 1 ? [true] : new Array(parcelCount).fill(false),
+          createdAt: Date.now(),
           pago: false
         };
         entries.push(entry);
@@ -695,10 +830,9 @@
           openPasswordModal(id);
           return;
         }
-        const clientButton = target.closest(".client-link");
-        if (clientButton) {
-          const id = clientButton.getAttribute("data-id");
-          openParcelModal(id);
+        const row = target.closest("tr");
+        if (row && row.getAttribute("data-id")) {
+          openParcelModal(row.getAttribute("data-id"));
         }
       });
     }
@@ -722,6 +856,7 @@
           return;
         }
         entry.pago = true;
+        entry.paidAt = Date.now();
         saveEntries(entries);
         renderEntries();
         closePasswordModal();
@@ -774,6 +909,12 @@
         saveEntries(entries);
         renderEntries();
         openParcelModal(entryId);
+      });
+    }
+
+    if (salesChart) {
+      window.addEventListener("resize", () => {
+        renderSalesChart();
       });
     }
 
