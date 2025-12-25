@@ -67,10 +67,9 @@
 ];
 
 const card = document.getElementById("card");
-const cardName = document.getElementById("cardName");
-const cardMeaning = document.getElementById("cardMeaning");
-const cardTag = document.getElementById("cardTag");
-const drawBtn = document.getElementById("drawBtn");
+const carouselTrack = document.getElementById("carouselTrack");
+const carouselMore = document.getElementById("carouselMore");
+const drawCount = document.getElementById("drawCount");
 const resetBtn = document.getElementById("resetBtn");
 const topicHint = document.getElementById("topicHint");
 const chips = document.querySelectorAll(".chip");
@@ -86,11 +85,37 @@ const FLIP_DURATION_MS = 900;
 const ADMIN_FALLBACK_TARGET = "admin.html";
 
 let currentTopic = null;
-let currentCard = null;
-let flipTimer = null;
-let doneTimer = null;
+const flipTimers = new WeakMap();
+const doneTimers = new WeakMap();
 let audioCtx = null;
 let soundEnabled = true;
+let drawTotal = 1;
+let cardPool = [];
+let cardNodes = [];
+let centerIndex = 0;
+let dragStartX = 0;
+let dragOffset = 0;
+let isDragging = false;
+let cardSpacing = 200;
+
+const cardTemplate = card;
+if (cardTemplate) {
+  cardTemplate.remove();
+}
+
+function buildCardPool(count) {
+  const pool = [];
+  const used = new Set();
+  while (pool.length < count) {
+    const idx = Math.floor(Math.random() * cards.length);
+    if (used.has(idx) && cards.length > count) {
+      continue;
+    }
+    used.add(idx);
+    pool.push({ ...cards[idx] });
+  }
+  return pool;
+}
 
 function openAdminModal() {
   if (!adminModal) return;
@@ -111,73 +136,135 @@ function closeAdminModal() {
 }
 
 function pickCard() {
-  const idx = Math.floor(Math.random() * cards.length);
-  currentCard = cards[idx];
-  updateCardText();
+  cardPool = buildCardPool(drawTotal);
+  centerIndex = 0;
 }
 
-function updateCardText() {
-  if (!currentCard) return;
-  cardName.textContent = currentCard.name;
-  cardTag.textContent = currentCard.tag;
-  cardMeaning.textContent = currentTopic && currentCard.topics[currentTopic]
-    ? currentCard.topics[currentTopic]
-    : currentCard.meaning;
-}
-
-function flipCard() {
-  if (!currentCard) return;
-  card.classList.remove("flip-anim");
-  card.classList.remove("done");
-  void card.offsetWidth;
-  card.classList.add("flip-anim");
-  card.classList.add("flipped");
+function flipCard(cardEl) {
+  if (!cardEl) return;
+  cardEl.classList.remove("flip-anim");
+  cardEl.classList.remove("done");
+  void cardEl.offsetWidth;
+  cardEl.classList.add("flip-anim");
+  cardEl.classList.add("flipped");
   if (navigator.vibrate) {
     navigator.vibrate(18);
   }
-  if (flipTimer) clearTimeout(flipTimer);
-  if (doneTimer) clearTimeout(doneTimer);
-  flipTimer = setTimeout(() => {
-    card.classList.remove("flip-anim");
+  const existingFlip = flipTimers.get(cardEl);
+  const existingDone = doneTimers.get(cardEl);
+  if (existingFlip) clearTimeout(existingFlip);
+  if (existingDone) clearTimeout(existingDone);
+  const flipTimer = setTimeout(() => {
+    cardEl.classList.remove("flip-anim");
   }, FLIP_DURATION_MS);
-  doneTimer = setTimeout(() => {
-    card.classList.add("done");
+  const doneTimer = setTimeout(() => {
+    cardEl.classList.add("done");
   }, FLIP_DURATION_MS);
+  flipTimers.set(cardEl, flipTimer);
+  doneTimers.set(cardEl, doneTimer);
   if (soundEnabled) {
     playFlipSound();
   }
 }
 
-function resetCard() {
-  card.classList.remove("flipped");
-  card.classList.remove("done");
-  card.classList.remove("flip-anim");
-  if (flipTimer) clearTimeout(flipTimer);
-  if (doneTimer) clearTimeout(doneTimer);
+function resetCard(cardEl) {
+  if (!cardEl) return;
+  cardEl.classList.remove("flipped");
+  cardEl.classList.remove("done");
+  cardEl.classList.remove("flip-anim");
+  const existingFlip = flipTimers.get(cardEl);
+  const existingDone = doneTimers.get(cardEl);
+  if (existingFlip) clearTimeout(existingFlip);
+  if (existingDone) clearTimeout(existingDone);
 }
 
-card.addEventListener("click", () => {
-  if (card.classList.contains("flipped")) {
-    resetCard();
-    pickCard();
-    setTimeout(() => {
-      flipCard();
-    }, 120);
+function updateCardSpacing() {
+  if (!cardNodes.length) return;
+  const rect = cardNodes[0].getBoundingClientRect();
+  cardSpacing = rect.width * 0.7;
+}
+
+function updateMoreIndicator() {
+  if (!carouselMore) return;
+  const extra = drawTotal - 3;
+  if (extra > 0) {
+    carouselMore.textContent = `+${extra}`;
+    carouselMore.classList.add("show");
+  } else {
+    carouselMore.textContent = "";
+    carouselMore.classList.remove("show");
+  }
+}
+
+function layoutCarousel(offset = 0) {
+  if (!cardNodes.length) return;
+  updateCardSpacing();
+  const spacing = cardSpacing || 200;
+  const dragUnits = offset / spacing;
+  cardNodes.forEach((node, index) => {
+    const distance = index - centerIndex - dragUnits;
+    const absDistance = Math.abs(distance);
+    const scale = Math.max(0.72, 1 - absDistance * 0.2);
+    const translate = (index - centerIndex) * spacing + offset;
+    node.style.setProperty("--tx", `${translate}px`);
+    node.style.setProperty("--scale", scale.toFixed(3));
+    node.style.opacity = absDistance > 1.6 ? "0" : "1";
+    node.style.pointerEvents = absDistance > 1.1 ? "none" : "auto";
+    node.style.zIndex = String(100 - Math.round(absDistance * 10));
+    node.classList.toggle("is-center", absDistance < 0.01);
+  });
+}
+
+function handleCardClick(index) {
+  if (index !== centerIndex) {
+    centerIndex = index;
+    layoutCarousel(0);
     return;
   }
-  if (!currentCard) {
-    pickCard();
+  const cardNode = cardNodes[index];
+  if (!cardNode || cardNode.classList.contains("flipped")) {
+    return;
   }
-  flipCard();
-});
+  flipCard(cardNode);
+}
 
-drawBtn.addEventListener("click", () => {
-  pickCard();
-  flipCard();
-});
+function renderCarousel() {
+  if (!carouselTrack || !cardTemplate) return;
+  carouselTrack.innerHTML = "";
+  cardNodes = cardPool.map((cardData, index) => {
+    const cardNode = cardTemplate.cloneNode(true);
+    cardNode.id = "";
+    cardNode.classList.add("carousel-card");
+    const front = cardNode.querySelector("#cardFront");
+    if (front) front.removeAttribute("id");
+    const nameEl = cardNode.querySelector("#cardName") || cardNode.querySelector("h2");
+    const meaningEl = cardNode.querySelector("#cardMeaning") || cardNode.querySelector("p");
+    const tagEl = cardNode.querySelector("#cardTag") || cardNode.querySelector(".tag");
+    if (nameEl) nameEl.removeAttribute("id");
+    if (meaningEl) meaningEl.removeAttribute("id");
+    if (tagEl) tagEl.removeAttribute("id");
+    if (cardData) {
+      nameEl.textContent = cardData.name;
+      tagEl.textContent = cardData.tag;
+      meaningEl.textContent = currentTopic && cardData.topics[currentTopic]
+        ? cardData.topics[currentTopic]
+        : cardData.meaning;
+    }
+    cardNode.addEventListener("click", () => {
+      handleCardClick(index);
+    });
+    carouselTrack.appendChild(cardNode);
+    return cardNode;
+  });
+  centerIndex = Math.min(centerIndex, cardNodes.length - 1);
+  layoutCarousel(0);
+  updateMoreIndicator();
+}
 
 resetBtn.addEventListener("click", () => {
-  resetCard();
+  pickCard();
+  centerIndex = 0;
+  renderCarousel();
 });
 
 chips.forEach((chip) => {
@@ -186,11 +273,57 @@ chips.forEach((chip) => {
     chip.classList.add("active");
     currentTopic = chip.dataset.topic;
     topicHint.textContent = `Tema atual: ${chip.textContent}.`;
-    updateCardText();
+    renderCarousel();
   });
 });
 
+if (drawCount) {
+  drawCount.addEventListener("change", (event) => {
+    drawTotal = parseInt(event.target.value, 10) || 1;
+    pickCard();
+    renderCarousel();
+  });
+}
+
+if (carouselTrack) {
+  carouselTrack.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+    dragStartX = event.clientX;
+    dragOffset = 0;
+    carouselTrack.classList.add("dragging");
+    carouselTrack.setPointerCapture(event.pointerId);
+  });
+
+  carouselTrack.addEventListener("pointermove", (event) => {
+    if (!isDragging) return;
+    dragOffset = event.clientX - dragStartX;
+    layoutCarousel(dragOffset);
+  });
+
+  const endDrag = (event) => {
+    if (!isDragging) return;
+    isDragging = false;
+    carouselTrack.classList.remove("dragging");
+    carouselTrack.releasePointerCapture(event.pointerId);
+    const threshold = cardSpacing * 0.25;
+    if (Math.abs(dragOffset) > threshold) {
+      centerIndex += dragOffset < 0 ? 1 : -1;
+      centerIndex = Math.max(0, Math.min(centerIndex, cardNodes.length - 1));
+    }
+    dragOffset = 0;
+    layoutCarousel(0);
+  };
+
+  carouselTrack.addEventListener("pointerup", endDrag);
+  carouselTrack.addEventListener("pointercancel", endDrag);
+}
+
+window.addEventListener("resize", () => {
+  layoutCarousel(0);
+});
+
 pickCard();
+renderCarousel();
 updateSoundToggle();
 
 if (adminBtn) {

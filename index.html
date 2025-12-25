@@ -38,19 +38,33 @@
     <div class="ornament divider" aria-hidden="true"></div>
 
     <section class="card-area">
-      <div class="card" id="card">
-        <div class="card-face card-back">
-          <div class="sigil"></div>
-          <p>Clique para revelar</p>
+      <div class="card-carousel" id="cardCarousel">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="card" id="card">
+            <div class="card-face card-back">
+              <div class="sigil"></div>
+              <p>Clique para revelar</p>
+            </div>
+            <div class="card-face card-front" id="cardFront">
+              <h2 id="cardName">A Carta</h2>
+              <p id="cardMeaning">Mensagem do tar&#244;.</p>
+              <span class="tag" id="cardTag">Luz</span>
+            </div>
+          </div>
         </div>
-        <div class="card-face card-front" id="cardFront">
-          <h2 id="cardName">A Carta</h2>
-          <p id="cardMeaning">Mensagem do tarô.</p>
-          <span class="tag" id="cardTag">Luz</span>
-        </div>
+        <span class="carousel-more" id="carouselMore" aria-hidden="true"></span>
       </div>
       <div class="controls">
-        <button id="drawBtn">Tirar nova carta</button>
+        <label class="draw-select">
+          <span>Quantidade de cartas</span>
+          <select id="drawCount">
+            <option value="1">1 carta</option>
+            <option value="2">2 cartas</option>
+            <option value="3">3 cartas</option>
+            <option value="4">4 cartas</option>
+            <option value="5">5 cartas</option>
+          </select>
+        </label>
         <button id="resetBtn" class="ghost">Virar de novo</button>
       </div>
     </section>
@@ -211,3 +225,7 @@
   <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
