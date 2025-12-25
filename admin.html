@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Area do administrador</title>
+  <title>&#193;rea do administrador</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     .admin-panel {
@@ -221,8 +221,8 @@
         <div class="brand-mark" aria-hidden="true">
           <span class="brand-sigil"></span>
         </div>
-        <p class="eyebrow">Administracao</p>
-        <h1>Pagina do administrador</h1>
+        <p class="eyebrow">Administra&#231;&#227;o</p>
+        <h1>P&#225;gina do administrador</h1>
         <p class="subtitle">Cadastre clientes e acompanhe parcelas.</p>
       </header>
 
@@ -264,8 +264,8 @@
                 <option value="">Selecione</option>
                 <option value="pix">Pix</option>
                 <option value="dinheiro">Dinheiro</option>
-                <option value="debito">Cartao debito</option>
-                <option value="credito">Cartao credito</option>
+                <option value="debito">Cart&#227;o d&#233;bito</option>
+                <option value="credito">Cart&#227;o cr&#233;dito</option>
               </select>
             </label>
           </div>
@@ -290,7 +290,7 @@
                 <th>Valor devedor</th>
                 <th>Pagamento</th>
                 <th>Status</th>
-                <th>Acoes</th>
+                <th>A&#231;&#245;es</th>
               </tr>
             </thead>
             <tbody id="clientTableBody">
@@ -301,12 +301,12 @@
     </main>
 
     <footer class="foot">
-      <p>Use esta pagina somente com autorizacao.</p>
+      <p>Use esta p&#225;gina somente com autoriza&#231;&#227;o.</p>
     </footer>
   </div>
 
   <div class="toast" id="paidToast" role="status" aria-live="polite">
-    <span class="toast-icon">✓</span>
+    <span class="toast-icon">&#10003;</span>
     <span id="paidToastText">Pagamento marcado.</span>
   </div>
 
@@ -347,7 +347,7 @@
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
         "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>" +
         "<td data-label=\"Status\"><span class=\"status-pill\">" + statusLabel + "</span></td>" +
-        "<td data-label=\"Acoes\">" +
+        "<td data-label=\"A&#231;&#245;es\">" +
           "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
           (entry.pago ? " disabled" : "") + ">" + actionLabel + "</button>" +
         "</td>";
