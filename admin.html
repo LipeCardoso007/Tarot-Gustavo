@@ -529,6 +529,48 @@
       localStorage.setItem("adminClients", JSON.stringify(entries));
     }
 
+    function buildParcelSchedule(totalCents, parcelas) {
+      const count = Math.max(1, parseInt(parcelas, 10) || 1);
+      const baseValue = Math.floor(totalCents / count);
+      const remainder = totalCents % count;
+      const schedule = [];
+      for (let i = 0; i < count; i += 1) {
+        schedule.push(baseValue + (i < remainder ? 1 : 0));
+      }
+      return schedule;
+    }
+
+    function openParcelModal(entryId) {
+      if (!parcelModal || !parcelDetails) return;
+      const entry = entries.find((item) => item.id === entryId);
+      if (!entry) return;
+      const schedule = buildParcelSchedule(entry.valorCents, entry.parcelas);
+      const rows = schedule.map((amount, index) => {
+        return "<tr><td>" + (index + 1) + "ª</td><td>R$ " + formatMoneyFromCents(amount) + "</td></tr>";
+      }).join("");
+      parcelDetails.innerHTML = "" +
+        "<div class=\"parcel-summary\">" +
+          "<p><strong>Cliente:</strong> " + escapeHtml(entry.cliente) + "</p>" +
+          "<p><strong>Total:</strong> R$ " + formatMoneyFromCents(entry.valorCents) + "</p>" +
+          "<p><strong>Parcelas:</strong> " + escapeHtml(entry.parcelas) + "x</p>" +
+        "</div>" +
+        "<table class=\"parcel-table\">" +
+          "<thead><tr><th>Parcela</th><th>Valor</th></tr></thead>" +
+          "<tbody>" + rows + "</tbody>" +
+        "</table>";
+      parcelModal.classList.add("open");
+      parcelModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeParcelModal() {
+      if (!parcelModal) return;
+      parcelModal.classList.remove("open");
+      parcelModal.setAttribute("aria-hidden", "true");
+      if (parcelDetails) {
+        parcelDetails.innerHTML = "";
+      }
+    }
+
     function showToast(message) {
       if (!paidToast) return;
       if (paidToastText) {
@@ -590,6 +632,7 @@
           cliente,
           parcelas,
           valor,
+          valorCents: parseMoneyToCents(valor),
           pagamento,
           pagamentoLabel,
           pago: false
@@ -620,11 +663,18 @@
     if (tableBody) {
       tableBody.addEventListener("click", (event) => {
         const target = event.target;
-        if (!target || !target.matches(".mark-paid-btn")) {
+        if (!target) return;
+        const paidButton = target.closest(".mark-paid-btn");
+        if (paidButton) {
+          const id = paidButton.getAttribute("data-id");
+          openPasswordModal(id);
           return;
         }
-        const id = target.getAttribute("data-id");
-        openPasswordModal(id);
+        const clientButton = target.closest(".client-link");
+        if (clientButton) {
+          const id = clientButton.getAttribute("data-id");
+          openParcelModal(id);
+        }
       });
     }
 
@@ -663,9 +713,26 @@
       });
     }
 
+    if (parcelModal) {
+      parcelModal.addEventListener("click", (event) => {
+        if (event.target && event.target.dataset && event.target.dataset.close === "true") {
+          closeParcelModal();
+        }
+      });
+    }
+
+    if (parcelClose) {
+      parcelClose.addEventListener("click", () => {
+        closeParcelModal();
+      });
+    }
+
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && passwordModal && passwordModal.classList.contains("open")) {
         closePasswordModal();
+      }
+      if (event.key === "Escape" && parcelModal && parcelModal.classList.contains("open")) {
+        closeParcelModal();
       }
     });
 
