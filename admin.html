@@ -307,6 +307,14 @@
       font-weight: 600;
     }
 
+    .metric-value.received {
+      color: #78d0a0;
+    }
+
+    .metric-value.to-receive {
+      color: #7aa7d8;
+    }
+
     .chart-title {
       margin: 0 0 10px;
       color: var(--accent);
@@ -429,11 +437,11 @@
         <div class="metrics-row">
           <div class="metric-card">
             <span class="metric-label">Total a receber</span>
-            <strong class="metric-value" id="totalToReceive">R$ 0,00</strong>
+            <strong class="metric-value to-receive" id="totalToReceive">R$ 0,00</strong>
           </div>
           <div class="metric-card">
             <span class="metric-label">Total recebido</span>
-            <strong class="metric-value" id="totalReceived">R$ 0,00</strong>
+            <strong class="metric-value received" id="totalReceived">R$ 0,00</strong>
           </div>
         </div>
       </section>
