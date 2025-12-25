@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-br">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -68,6 +69,12 @@
       color: var(--accent);
     }
 
+    .admin-table-wrap {
+      margin-top: 16px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
     @media (max-width: 720px) {
       .admin-table {
         font-size: 0.85rem;
@@ -85,6 +92,7 @@
     }
 
     @media (max-width: 560px) {
+
       .admin-table,
       .admin-table thead,
       .admin-table tbody,
@@ -110,20 +118,25 @@
       .admin-table td {
         border: none;
         padding: 6px 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        align-items: baseline;
       }
 
       .admin-table td::before {
         content: attr(data-label);
-        display: block;
+        display: inline-block;
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 1px;
         color: var(--muted);
-        margin-bottom: 4px;
+        margin-bottom: 0;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
@@ -150,7 +163,7 @@
           <div class="admin-form-row">
             <label>
               Cliente
-              <input type="text" name="cliente" id="cliente" required />
+              <input type="text" name="cliente" id="cliente" placeholder="Digite aqui..." required />
             </label>
             <label>
               Quantidade de parcelas
@@ -200,7 +213,7 @@
           <p class="offerings-desc" style="margin: 0;">Lista gerada localmente no navegador.</p>
           <button class="ghost" id="clearList" type="button">Limpar lista</button>
         </div>
-        <div style="margin-top: 16px;">
+        <div class="admin-table-wrap">
           <table class="admin-table" aria-describedby="listaClientes">
             <thead>
               <tr>
@@ -309,4 +322,5 @@
     loadEntries();
   </script>
 </body>
+
 </html>
