@@ -681,8 +681,11 @@
         context.stroke();
       }
 
+      const stagger = 0.08;
       data.totals.forEach((value, index) => {
-        const barHeight = ((value / data.maxValue) * plotHeight) * eased;
+        const localProgress = Math.min(Math.max((progress - index * stagger) / (1 - stagger), 0), 1);
+        const localEase = 1 - Math.pow(1 - localProgress, 3);
+        const barHeight = ((value / data.maxValue) * plotHeight) * localEase;
         const x = padding.left + index * barSlot + (barSlot - barWidth) / 2;
         const y = padding.top + (plotHeight - barHeight);
         context.fillStyle = "rgba(215, 180, 106, 0.8)";
