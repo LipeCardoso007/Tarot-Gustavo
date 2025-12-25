@@ -67,6 +67,45 @@
       min-width: 140px;
     }
 
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 20px;
+      background: rgba(20, 17, 30, 0.95);
+      color: var(--ink);
+      border: 1px solid rgba(120, 208, 160, 0.5);
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 0 18px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 5;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid rgba(120, 208, 160, 0.6);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #78d0a0;
+      font-weight: 600;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
     .admin-form-row {
       display: flex;
       gap: 14px;
@@ -266,12 +305,20 @@
     </footer>
   </div>
 
+  <div class="toast" id="paidToast" role="status" aria-live="polite">
+    <span class="toast-icon">✓</span>
+    <span id="paidToastText">Pagamento marcado.</span>
+  </div>
+
   <script>
     const form = document.getElementById("adminClientForm");
     const tableBody = document.getElementById("clientTableBody");
     const valorInput = document.getElementById("valor");
     const ADMIN_PASSWORD = "34713471";
+    const paidToast = document.getElementById("paidToast");
+    const paidToastText = document.getElementById("paidToastText");
     let entries = [];
+    let toastTimer = null;
 
     function escapeHtml(value) {
       return value
@@ -309,6 +356,20 @@
 
     function saveEntries(entries) {
       localStorage.setItem("adminClients", JSON.stringify(entries));
+    }
+
+    function showToast(message) {
+      if (!paidToast) return;
+      if (paidToastText) {
+        paidToastText.textContent = message;
+      }
+      paidToast.classList.add("show");
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+      }
+      toastTimer = setTimeout(() => {
+        paidToast.classList.remove("show");
+      }, 2500);
     }
 
     function renderEntries() {
@@ -383,6 +444,7 @@
         entry.pago = true;
         saveEntries(entries);
         renderEntries();
+        showToast("Pagamento marcado como pago.");
       });
     }
 
