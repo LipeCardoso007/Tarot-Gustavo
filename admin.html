@@ -154,13 +154,27 @@
             </label>
             <label>
               Quantidade de parcelas
-              <input type="number" name="parcelas" id="parcelas" min="1" step="1" required />
+              <select name="parcelas" id="parcelas" required>
+                <option value="">Selecione</option>
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+                <option value="5">5x</option>
+                <option value="6">6x</option>
+                <option value="7">7x</option>
+                <option value="8">8x</option>
+                <option value="9">9x</option>
+                <option value="10">10x</option>
+                <option value="11">11x</option>
+                <option value="12">12x</option>
+              </select>
             </label>
           </div>
           <div class="admin-form-row">
             <label>
               Valor devedor (R$)
-              <input type="number" name="valor" id="valor" min="0" step="0.01" required />
+              <input type="text" name="valor" id="valor" inputmode="numeric" placeholder="0,00" required />
             </label>
             <label>
               Forma de pagamento
@@ -212,6 +226,7 @@
     const form = document.getElementById("adminClientForm");
     const tableBody = document.getElementById("clientTableBody");
     const clearBtn = document.getElementById("clearList");
+    const valorInput = document.getElementById("valor");
 
     function escapeHtml(value) {
       return value
@@ -265,6 +280,22 @@
         saveEntries(entries);
         appendRow(entry);
         form.reset();
+      });
+    }
+
+    function formatMoneyInput(value) {
+      const digits = value.replace(/\D/g, "");
+      const padded = digits.padStart(3, "0");
+      const cents = padded.slice(-2);
+      const integer = padded.slice(0, -2);
+      const integerFormatted = integer.replace(/^0+(?=\d)/, "") || "0";
+      return integerFormatted + "," + cents;
+    }
+
+    if (valorInput) {
+      valorInput.addEventListener("input", (event) => {
+        const current = event.target.value;
+        event.target.value = formatMoneyInput(current);
       });
     }
 
