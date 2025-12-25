@@ -482,9 +482,25 @@
         .replace(/'/g, "&#39;");
     }
 
+    function parseMoneyToCents(value) {
+      const digits = value.replace(/\D/g, "");
+      return digits ? parseInt(digits, 10) : 0;
+    }
+
+    function formatMoneyFromCents(cents) {
+      const integer = Math.floor(cents / 100);
+      const decimals = String(cents % 100).padStart(2, "0");
+      return integer.toString() + "," + decimals;
+    }
+
     function loadEntries() {
       const stored = localStorage.getItem("adminClients");
       entries = stored ? JSON.parse(stored) : [];
+      entries.forEach((entry) => {
+        if (typeof entry.valorCents !== "number") {
+          entry.valorCents = parseMoneyToCents(entry.valor || "");
+        }
+      });
       renderEntries();
     }
 
