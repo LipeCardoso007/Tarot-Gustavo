@@ -272,6 +272,39 @@
       border-radius: 16px;
       border: 1px solid rgba(215, 180, 106, 0.2);
       background: rgba(18, 14, 26, 0.7);
+      box-shadow: 0 16px 30px var(--shadow);
+    }
+
+    .metrics-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .metric-card {
+      flex: 1 1 240px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(215, 180, 106, 0.2);
+      background: rgba(18, 14, 26, 0.75);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 14px 26px var(--shadow);
+    }
+
+    .metric-label {
+      font-size: 0.82rem;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .metric-value {
+      font-size: 1.3rem;
+      color: var(--accent);
+      font-weight: 600;
     }
 
     .chart-title {
@@ -359,6 +392,10 @@
       #salesChart {
         height: 210px;
       }
+
+      .metrics-row {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -388,6 +425,16 @@
           <h2 class="chart-title">Grafico de vendas</h2>
           <p class="chart-note">Total vendido por dia (ultimos 7 dias, incluindo hoje).</p>
           <canvas id="salesChart" width="720" height="180" aria-label="Grafico de vendas por dia" role="img"></canvas>
+        </div>
+        <div class="metrics-row">
+          <div class="metric-card">
+            <span class="metric-label">Total a receber</span>
+            <strong class="metric-value" id="totalToReceive">R$ 0,00</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Total recebido</span>
+            <strong class="metric-value" id="totalReceived">R$ 0,00</strong>
+          </div>
         </div>
       </section>
 
@@ -520,6 +567,8 @@
     const parcelDetails = document.getElementById("parcelDetails");
     const parcelClose = document.getElementById("parcelClose");
     const salesChart = document.getElementById("salesChart");
+    const totalToReceive = document.getElementById("totalToReceive");
+    const totalReceived = document.getElementById("totalReceived");
     let entries = [];
     let toastTimer = null;
     let pendingPaidId = null;
@@ -721,6 +770,42 @@
       return schedule;
     }
 
+    function getOutstandingCents(entry) {
+      if (entry.pago) {
+        return 0;
+      }
+      const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
+      if (parcelCount === 1) {
+        return entry.valorCents || 0;
+      }
+      const schedule = buildParcelSchedule(entry.valorCents || 0, entry.parcelas);
+      let total = 0;
+      for (let i = 0; i < schedule.length; i += 1) {
+        if (!entry.parcelPaid || !entry.parcelPaid[i]) {
+          total += schedule[i];
+        }
+      }
+      return total;
+    }
+
+    function renderMetrics() {
+      let toReceive = 0;
+      let received = 0;
+      entries.forEach((entry) => {
+        if (entry.pago) {
+          received += entry.valorCents || 0;
+        } else {
+          toReceive += getOutstandingCents(entry);
+        }
+      });
+      if (totalToReceive) {
+        totalToReceive.textContent = "R$ " + formatMoneyFromCents(toReceive);
+      }
+      if (totalReceived) {
+        totalReceived.textContent = "R$ " + formatMoneyFromCents(received);
+      }
+    }
+
     function openParcelModal(entryId) {
       if (!parcelModal || !parcelDetails) return;
       const entry = entries.find((item) => item.id === entryId);
@@ -802,6 +887,7 @@
         appendRow(entry);
       });
       renderSalesChart();
+      renderMetrics();
     }
 
     if (form) {
