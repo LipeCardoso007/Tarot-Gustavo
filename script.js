@@ -75,8 +75,15 @@ const resetBtn = document.getElementById("resetBtn");
 const topicHint = document.getElementById("topicHint");
 const chips = document.querySelectorAll(".chip");
 const soundToggle = document.getElementById("soundToggle");
+const adminBtn = document.getElementById("adminBtn");
+const adminModal = document.getElementById("adminModal");
+const adminForm = document.getElementById("adminForm");
+const adminCancel = document.getElementById("adminCancel");
+const adminLogin = document.getElementById("adminLogin");
+const adminPassword = document.getElementById("adminPassword");
 
 const FLIP_DURATION_MS = 900;
+const ADMIN_FALLBACK_TARGET = "admin.html";
 
 let currentTopic = null;
 let currentCard = null;
@@ -84,6 +91,24 @@ let flipTimer = null;
 let doneTimer = null;
 let audioCtx = null;
 let soundEnabled = true;
+
+function openAdminModal() {
+  if (!adminModal) return;
+  adminModal.classList.add("open");
+  adminModal.setAttribute("aria-hidden", "false");
+  if (adminLogin) {
+    adminLogin.focus();
+  }
+}
+
+function closeAdminModal() {
+  if (!adminModal) return;
+  adminModal.classList.remove("open");
+  adminModal.setAttribute("aria-hidden", "true");
+  if (adminForm) {
+    adminForm.reset();
+  }
+}
 
 function pickCard() {
   const idx = Math.floor(Math.random() * cards.length);
@@ -168,12 +193,52 @@ chips.forEach((chip) => {
 pickCard();
 updateSoundToggle();
 
+if (adminBtn) {
+  adminBtn.addEventListener("click", () => {
+    openAdminModal();
+  });
+}
+
+if (adminCancel) {
+  adminCancel.addEventListener("click", () => {
+    closeAdminModal();
+  });
+}
+
+if (adminModal) {
+  adminModal.addEventListener("click", (event) => {
+    if (event.target && event.target.dataset && event.target.dataset.close === "true") {
+      closeAdminModal();
+    }
+  });
+}
+
+if (adminForm) {
+  adminForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const loginValue = adminLogin ? adminLogin.value.trim() : "";
+    const passwordValue = adminPassword ? adminPassword.value.trim() : "";
+    if (!loginValue || !passwordValue) {
+      return;
+    }
+    const target = (adminBtn && adminBtn.dataset.target) ? adminBtn.dataset.target : ADMIN_FALLBACK_TARGET;
+    closeAdminModal();
+    window.location.href = target;
+  });
+}
+
 if (soundToggle) {
   soundToggle.addEventListener("click", () => {
     soundEnabled = !soundEnabled;
     updateSoundToggle();
   });
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && adminModal && adminModal.classList.contains("open")) {
+    closeAdminModal();
+  }
+});
 
 function playFlipSound() {
   if (!window.AudioContext) return;

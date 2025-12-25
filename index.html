@@ -13,6 +13,11 @@
 
   <div class="page">
   <main class="wrap">
+    <div class="top-actions">
+      <button class="admin-btn ghost" id="adminBtn" type="button" data-target="admin.html">
+        Area do administrador
+      </button>
+    </div>
     <header class="hero">
       <div class="brand-mark" aria-hidden="true">
         <span class="brand-sigil"></span>
@@ -177,6 +182,28 @@
   <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">
     Som: ligado
   </button>
+
+  <div class="modal" id="adminModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <h2 id="adminTitle">Area do administrador</h2>
+      <p class="modal-subtitle">Informe login e senha para continuar.</p>
+      <form id="adminForm" class="modal-form">
+        <label>
+          Login
+          <input type="text" id="adminLogin" name="adminLogin" autocomplete="username" required />
+        </label>
+        <label>
+          Senha
+          <input type="password" id="adminPassword" name="adminPassword" autocomplete="current-password" required />
+        </label>
+        <div class="modal-actions">
+          <button type="submit">Entrar</button>
+          <button type="button" class="ghost" id="adminCancel">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
