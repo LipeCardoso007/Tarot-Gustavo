@@ -106,6 +106,79 @@
       flex-shrink: 0;
     }
 
+    .admin-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+    }
+
+    .admin-modal.open {
+      display: flex;
+    }
+
+    .admin-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 8, 18, 0.7);
+    }
+
+    .admin-modal-panel {
+      position: relative;
+      width: min(420px, 92vw);
+      background: linear-gradient(160deg, rgba(21, 17, 33, 0.98), rgba(15, 12, 23, 0.98));
+      border-radius: var(--radius);
+      padding: 22px;
+      border: 1px solid rgba(215, 180, 106, 0.22);
+      box-shadow: 0 22px 44px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1;
+    }
+
+    .admin-modal-panel h2 {
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+
+    .admin-modal-subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .admin-modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .admin-modal-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .admin-modal-form input {
+      background: rgba(10, 8, 18, 0.85);
+      border: 1px solid rgba(215, 180, 106, 0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+
+    .admin-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .admin-form-row {
       display: flex;
       gap: 14px;
@@ -310,6 +383,24 @@
     <span id="paidToastText">Pagamento marcado.</span>
   </div>
 
+  <div class="admin-modal" id="passwordModal" aria-hidden="true">
+    <div class="admin-modal-backdrop" data-close="true"></div>
+    <div class="admin-modal-panel" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+      <h2 id="passwordTitle">Confirmar pagamento</h2>
+      <p class="admin-modal-subtitle">Digite a senha para marcar como pago.</p>
+      <form id="passwordForm" class="admin-modal-form">
+        <label>
+          Senha
+          <input type="password" id="passwordInput" autocomplete="current-password" required />
+        </label>
+        <div class="admin-modal-actions">
+          <button type="submit">Confirmar</button>
+          <button type="button" class="ghost" id="passwordCancel">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const form = document.getElementById("adminClientForm");
     const tableBody = document.getElementById("clientTableBody");
@@ -317,8 +408,13 @@
     const ADMIN_PASSWORD = "34713471";
     const paidToast = document.getElementById("paidToast");
     const paidToastText = document.getElementById("paidToastText");
+    const passwordModal = document.getElementById("passwordModal");
+    const passwordForm = document.getElementById("passwordForm");
+    const passwordInput = document.getElementById("passwordInput");
+    const passwordCancel = document.getElementById("passwordCancel");
     let entries = [];
     let toastTimer = null;
+    let pendingPaidId = null;
 
     function escapeHtml(value) {
       return value
@@ -370,6 +466,27 @@
       toastTimer = setTimeout(() => {
         paidToast.classList.remove("show");
       }, 2500);
+    }
+
+    function openPasswordModal(entryId) {
+      if (!passwordModal) return;
+      pendingPaidId = entryId;
+      passwordModal.classList.add("open");
+      passwordModal.setAttribute("aria-hidden", "false");
+      if (passwordInput) {
+        passwordInput.value = "";
+        passwordInput.focus();
+      }
+    }
+
+    function closePasswordModal() {
+      if (!passwordModal) return;
+      passwordModal.classList.remove("open");
+      passwordModal.setAttribute("aria-hidden", "true");
+      pendingPaidId = null;
+      if (passwordForm) {
+        passwordForm.reset();
+      }
     }
 
     function renderEntries() {
@@ -432,21 +549,50 @@
           return;
         }
         const id = target.getAttribute("data-id");
-        const password = window.prompt("Digite a senha para confirmar:");
+        openPasswordModal(id);
+      });
+    }
+
+    if (passwordForm) {
+      passwordForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const password = passwordInput ? passwordInput.value : "";
         if (password !== ADMIN_PASSWORD) {
           alert("Senha incorreta.");
           return;
         }
-        const entry = entries.find((item) => item.id === id);
+        const entry = entries.find((item) => item.id === pendingPaidId);
         if (!entry || entry.pago) {
+          closePasswordModal();
           return;
         }
         entry.pago = true;
         saveEntries(entries);
         renderEntries();
+        closePasswordModal();
         showToast("Pagamento marcado como pago.");
       });
     }
+
+    if (passwordCancel) {
+      passwordCancel.addEventListener("click", () => {
+        closePasswordModal();
+      });
+    }
+
+    if (passwordModal) {
+      passwordModal.addEventListener("click", (event) => {
+        if (event.target && event.target.dataset && event.target.dataset.close === "true") {
+          closePasswordModal();
+        }
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && passwordModal && passwordModal.classList.contains("open")) {
+        closePasswordModal();
+      }
+    });
 
     loadEntries();
   </script>
