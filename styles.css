@@ -50,6 +50,13 @@ body {
   flex-direction: column;
   width: 100%;
   touch-action: pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.page::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .bg-orb {
