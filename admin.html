@@ -39,6 +39,17 @@
       background: rgba(215, 180, 106, 0.06);
     }
 
+    .client-link {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font: inherit;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
     .admin-table .status-pill {
       display: inline-flex;
       align-items: center;
@@ -215,6 +226,37 @@
       margin-top: 16px;
       width: 100%;
       overflow-x: auto;
+    }
+
+    .parcel-summary {
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .parcel-summary strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .parcel-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+
+    .parcel-table th,
+    .parcel-table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(215, 180, 106, 0.2);
+    }
+
+    .parcel-table th {
+      color: var(--accent);
+      font-weight: 600;
     }
 
     @media (max-width: 720px) {
@@ -401,6 +443,18 @@
     </div>
   </div>
 
+  <div class="admin-modal" id="parcelModal" aria-hidden="true">
+    <div class="admin-modal-backdrop" data-close="true"></div>
+    <div class="admin-modal-panel" role="dialog" aria-modal="true" aria-labelledby="parcelTitle">
+      <h2 id="parcelTitle">Parcelas do cliente</h2>
+      <p class="admin-modal-subtitle">Valores arredondados para fechar o total.</p>
+      <div id="parcelDetails"></div>
+      <div class="admin-modal-actions">
+        <button type="button" class="ghost" id="parcelClose">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const form = document.getElementById("adminClientForm");
     const tableBody = document.getElementById("clientTableBody");
@@ -438,7 +492,9 @@
       }
       const statusLabel = entry.pago ? "Pago" : "Pendente";
       const actionLabel = entry.pago ? "Pago" : "Marcar como finalizado";
-      row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
+      row.innerHTML = "<td data-label=\"Cliente\">" +
+        "<button type=\"button\" class=\"client-link\" data-id=\"" + entry.id + "\">" +
+        escapeHtml(entry.cliente) + "</button></td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
         "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>" +
