@@ -293,8 +293,8 @@
       if (entry.pago) {
         row.classList.add("is-paid");
       }
-      const statusLabel = entry.pago ? "Finalizado" : "Pendente";
-      const actionLabel = entry.pago ? "Finalizado" : "Marcar como finalizado";
+      const statusLabel = entry.pago ? "Pago" : "Pendente";
+      const actionLabel = entry.pago ? "Pago" : "Marcar como finalizado";
       row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
