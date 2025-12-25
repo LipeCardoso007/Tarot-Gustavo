@@ -403,6 +403,25 @@
 
       .metrics-row {
         flex-direction: column;
+        gap: 10px;
+      }
+
+      .metric-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        border-radius: 8px;
+        box-shadow: 0 8px 14px var(--shadow);
+        gap: 6px;
+      }
+
+      .metric-label {
+        font-size: 0.72rem;
+      }
+
+      .metric-value {
+        font-size: 0.98rem;
       }
     }
   </style>
@@ -665,15 +684,17 @@
       context.clearRect(0, 0, width, height);
 
       const eased = 1 - Math.pow(1 - progress, 3);
+      const isSmall = width <= 420;
       const padding = { top: 12, right: 10, bottom: 26, left: 36 };
       const plotWidth = width - padding.left - padding.right;
       const plotHeight = height - padding.top - padding.bottom;
       const barSlot = plotWidth / data.totals.length;
-      const barWidth = barSlot * 0.6;
+      const barWidth = barSlot * (isSmall ? 0.85 : 0.6);
 
       context.strokeStyle = "rgba(215, 180, 106, 0.2)";
       context.lineWidth = 1;
-      for (let i = 0; i <= 2; i += 1) {
+      const gridLines = isSmall ? 1 : 2;
+      for (let i = 0; i <= gridLines; i += 1) {
         const y = padding.top + (plotHeight / 2) * i;
         context.beginPath();
         context.moveTo(padding.left, y);
@@ -690,13 +711,23 @@
         const y = padding.top + (plotHeight - barHeight);
         context.fillStyle = "rgba(215, 180, 106, 0.8)";
         context.fillRect(x, y, barWidth, barHeight);
+        if (isSmall && value > 0) {
+          context.fillStyle = "rgba(245, 239, 228, 0.9)";
+          context.font = "10px Georgia, 'Times New Roman', serif";
+          context.textAlign = "center";
+          context.textBaseline = "bottom";
+          context.fillText("R$ " + formatMoneyFromCents(value), x + barWidth / 2, y - 4);
+        }
       });
 
       context.fillStyle = "rgba(215, 180, 106, 0.9)";
-      context.font = "11px Georgia, 'Times New Roman', serif";
+      context.font = isSmall ? "10px Georgia, 'Times New Roman', serif" : "11px Georgia, 'Times New Roman', serif";
       context.textAlign = "center";
       context.textBaseline = "top";
       data.days.forEach((day, index) => {
+        if (isSmall && index % 2 !== 0 && index !== data.days.length - 1) {
+          return;
+        }
         const label = getDayLabel(day);
         const x = padding.left + index * barSlot + barSlot / 2;
         context.fillText(label, x, height - padding.bottom + 6);
@@ -780,7 +811,7 @@
       const actionCell = entry.parcelas === "1"
         ? "<span class=\"status-pill\">Finalizado</span>"
         : "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
-          (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>";
+        (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>";
       row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
@@ -868,13 +899,13 @@
       }).join("");
       parcelDetails.innerHTML = "" +
         "<div class=\"parcel-summary\">" +
-          "<p><strong>Cliente:</strong> " + escapeHtml(entry.cliente) + "</p>" +
-          "<p><strong>Total:</strong> R$ " + formatMoneyFromCents(entry.valorCents) + "</p>" +
-          "<p><strong>Parcelas:</strong> " + escapeHtml(entry.parcelas) + "x</p>" +
+        "<p><strong>Cliente:</strong> " + escapeHtml(entry.cliente) + "</p>" +
+        "<p><strong>Total:</strong> R$ " + formatMoneyFromCents(entry.valorCents) + "</p>" +
+        "<p><strong>Parcelas:</strong> " + escapeHtml(entry.parcelas) + "x</p>" +
         "</div>" +
         "<table class=\"parcel-table\">" +
-          "<thead><tr><th>Parcela</th><th>Valor</th><th>Status</th><th>Acoes</th></tr></thead>" +
-          "<tbody>" + rows + "</tbody>" +
+        "<thead><tr><th>Parcela</th><th>Valor</th><th>Status</th><th>Acoes</th></tr></thead>" +
+        "<tbody>" + rows + "</tbody>" +
         "</table>";
       parcelModal.classList.add("open");
       parcelModal.setAttribute("aria-hidden", "false");
