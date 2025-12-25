@@ -40,8 +40,11 @@
     }
 
     .admin-table tbody tr {
-      cursor: pointer;
       transition: background 0.2s ease;
+    }
+
+    .admin-table tbody tr.is-clickable {
+      cursor: pointer;
     }
 
     .admin-table .status-pill {
@@ -644,8 +647,21 @@
           entry.createdAt = Date.now();
         }
         const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
-        if (parcelCount === 1) {
+        const isCardPayment = entry.pagamento === "debito" || entry.pagamento === "credito";
+        if (isCardPayment) {
+          entry.parcelPaid = new Array(parcelCount).fill(true);
+          entry.pago = true;
+          if (typeof entry.paidAt !== "number") {
+            entry.paidAt = entry.createdAt;
+          }
+        } else if (parcelCount === 1) {
           entry.parcelPaid = [true];
+          if (!entry.pago) {
+            entry.pago = true;
+          }
+          if (typeof entry.paidAt !== "number") {
+            entry.paidAt = entry.createdAt;
+          }
         } else if (!Array.isArray(entry.parcelPaid) || entry.parcelPaid.length !== parcelCount) {
           entry.parcelPaid = new Array(parcelCount).fill(false);
         }
@@ -662,18 +678,23 @@
       if (entry.pago) {
         row.classList.add("is-paid");
       }
+      const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
+      if (parcelCount > 1) {
+        row.classList.add("is-clickable");
+      }
       const statusLabel = entry.pago ? "Pago" : "Pendente";
       const actionLabel = entry.pago ? "Pago" : "Marcar como finalizado";
       const canFinalize = allParcelsPaid(entry);
+      const actionCell = entry.parcelas === "1"
+        ? "<span class=\"status-pill\">Finalizado</span>"
+        : "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
+          (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>";
       row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
         "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>" +
         "<td data-label=\"Status\"><span class=\"status-pill\">" + statusLabel + "</span></td>" +
-        "<td data-label=\"A&#231;&#245;es\">" +
-          "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
-          (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>" +
-        "</td>";
+        "<td data-label=\"A&#231;&#245;es\">" + actionCell + "</td>";
       tableBody.appendChild(row);
     }
 
@@ -798,6 +819,7 @@
         }
 
         const parcelCount = Math.max(1, parseInt(parcelas, 10) || 1);
+        const isCardPayment = pagamento === "debito" || pagamento === "credito";
         const entry = {
           id: Date.now().toString(),
           cliente,
@@ -806,10 +828,15 @@
           valorCents: parseMoneyToCents(valor),
           pagamento,
           pagamentoLabel,
-          parcelPaid: parcelCount === 1 ? [true] : new Array(parcelCount).fill(false),
+          parcelPaid: isCardPayment
+            ? new Array(parcelCount).fill(true)
+            : parcelCount === 1 ? [true] : new Array(parcelCount).fill(false),
           createdAt: Date.now(),
-          pago: false
+          pago: isCardPayment || parcelCount === 1
         };
+        if (entry.pago) {
+          entry.paidAt = entry.createdAt;
+        }
         entries.push(entry);
         saveEntries(entries);
         renderEntries();
@@ -844,7 +871,7 @@
           return;
         }
         const row = target.closest("tr");
-        if (row && row.getAttribute("data-id")) {
+        if (row && row.classList.contains("is-clickable") && row.getAttribute("data-id")) {
           openParcelModal(row.getAttribute("data-id"));
         }
       });
