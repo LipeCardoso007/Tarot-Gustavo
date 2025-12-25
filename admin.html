@@ -572,6 +572,8 @@
     let entries = [];
     let toastTimer = null;
     let pendingPaidId = null;
+    let chartAnimationId = null;
+    let chartAnimationStart = 0;
 
     function escapeHtml(value) {
       return value
@@ -634,7 +636,14 @@
       return days.map((day) => totals[getDayKey(day)] || 0);
     }
 
-    function renderSalesChart() {
+    function buildChartData() {
+      const days = getLastDays(7);
+      const totals = getSalesTotals(days);
+      const maxValue = Math.max(...totals, 1);
+      return { days, totals, maxValue };
+    }
+
+    function drawSalesChart(data, progress) {
       if (!salesChart) return;
       const context = salesChart.getContext("2d");
       if (!context) return;
@@ -647,13 +656,11 @@
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.clearRect(0, 0, width, height);
 
-      const days = getLastDays(7);
-      const totals = getSalesTotals(days);
-      const maxValue = Math.max(...totals, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
       const padding = { top: 12, right: 10, bottom: 26, left: 36 };
       const plotWidth = width - padding.left - padding.right;
       const plotHeight = height - padding.top - padding.bottom;
-      const barSlot = plotWidth / totals.length;
+      const barSlot = plotWidth / data.totals.length;
       const barWidth = barSlot * 0.6;
 
       context.strokeStyle = "rgba(215, 180, 106, 0.2)";
@@ -666,8 +673,8 @@
         context.stroke();
       }
 
-      totals.forEach((value, index) => {
-        const barHeight = (value / maxValue) * plotHeight;
+      data.totals.forEach((value, index) => {
+        const barHeight = ((value / data.maxValue) * plotHeight) * eased;
         const x = padding.left + index * barSlot + (barSlot - barWidth) / 2;
         const y = padding.top + (plotHeight - barHeight);
         context.fillStyle = "rgba(215, 180, 106, 0.8)";
@@ -678,13 +685,38 @@
       context.font = "11px Georgia, 'Times New Roman', serif";
       context.textAlign = "center";
       context.textBaseline = "top";
-      days.forEach((day, index) => {
+      data.days.forEach((day, index) => {
         const label = getDayLabel(day);
         const x = padding.left + index * barSlot + barSlot / 2;
         context.fillText(label, x, height - padding.bottom + 6);
       });
     }
 
+    function animateSalesChart(data) {
+      if (!salesChart) return;
+      if (chartAnimationId) {
+        cancelAnimationFrame(chartAnimationId);
+      }
+      chartAnimationStart = 0;
+      const duration = 600;
+      const step = (timestamp) => {
+        if (!chartAnimationStart) {
+          chartAnimationStart = timestamp;
+        }
+        const progress = Math.min((timestamp - chartAnimationStart) / duration, 1);
+        drawSalesChart(data, progress);
+        if (progress < 1) {
+          chartAnimationId = requestAnimationFrame(step);
+        }
+      };
+      chartAnimationId = requestAnimationFrame(step);
+    }
+
+    function renderSalesChart() {
+      if (!salesChart) return;
+      const data = buildChartData();
+      animateSalesChart(data);
+    }
     function loadEntries() {
       const stored = localStorage.getItem("adminClients");
       entries = stored ? JSON.parse(stored) : [];
