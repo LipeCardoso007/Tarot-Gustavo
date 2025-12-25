@@ -75,6 +75,17 @@
       min-width: 140px;
     }
 
+    .finalize-btn {
+      background: linear-gradient(135deg, #d7b46a, #c59b4f);
+      color: #1b1224;
+      border: none;
+    }
+
+    .finalize-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -254,6 +265,10 @@
     .parcel-table th {
       color: var(--accent);
       font-weight: 600;
+    }
+
+    .parcel-table tr.is-parcel-paid td {
+      color: #78d0a0;
     }
 
     .parcel-paid {
@@ -815,8 +830,8 @@
       const canFinalize = allParcelsPaid(entry);
       const actionCell = entry.parcelas === "1"
         ? "<span class=\"status-pill\">Finalizado</span>"
-        : "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
-        (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>";
+        : "<button type=\"button\" class=\"mark-paid-btn finalize-btn\" data-id=\"" + entry.id + "\"" +
+          (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>";
       row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
@@ -896,11 +911,12 @@
       const schedule = buildParcelSchedule(entry.valorCents, entry.parcelas);
       const rows = schedule.map((amount, index) => {
         const paid = entry.parcelPaid && entry.parcelPaid[index];
+        const rowClass = paid ? " class=\"is-parcel-paid\"" : "";
         const statusCell = paid ? "<span class=\"parcel-paid\">Pago</span>" : "Pendente";
         const actionBtn = paid
           ? "<button type=\"button\" class=\"ghost parcel-action-btn\" disabled>Pago</button>"
           : "<button type=\"button\" class=\"ghost parcel-action-btn\" data-id=\"" + entry.id + "\" data-index=\"" + index + "\">Marcar como paga</button>";
-        return "<tr><td>" + (index + 1) + "&ordf;</td><td>R$ " + formatMoneyFromCents(amount) + "</td><td>" + statusCell + "</td><td>" + actionBtn + "</td></tr>";
+        return "<tr" + rowClass + "><td>" + (index + 1) + "&ordf;</td><td>R$ " + formatMoneyFromCents(amount) + "</td><td>" + statusCell + "</td><td>" + actionBtn + "</td></tr>";
       }).join("");
       parcelDetails.innerHTML = "" +
         "<div class=\"parcel-summary\">" +
@@ -1114,6 +1130,7 @@
         saveEntries(entries);
         renderEntries();
         openParcelModal(entryId);
+        showToast("Parcela marcada.");
       });
     }
 
