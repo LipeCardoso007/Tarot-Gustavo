@@ -67,6 +67,61 @@
       text-decoration: none;
       color: var(--accent);
     }
+
+    @media (max-width: 720px) {
+      .admin-table {
+        font-size: 0.85rem;
+      }
+
+      .admin-table th,
+      .admin-table td {
+        padding: 8px 10px;
+      }
+
+      .admin-actions {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .admin-table,
+      .admin-table thead,
+      .admin-table tbody,
+      .admin-table th,
+      .admin-table td,
+      .admin-table tr {
+        display: block;
+        width: 100%;
+      }
+
+      .admin-table thead {
+        display: none;
+      }
+
+      .admin-table tr {
+        background: rgba(20, 17, 30, 0.78);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        padding: 8px 0;
+        border: 1px solid rgba(215, 180, 106, 0.18);
+      }
+
+      .admin-table td {
+        border: none;
+        padding: 6px 12px;
+      }
+
+      .admin-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -178,10 +233,10 @@
 
     function appendRow(entry) {
       const row = document.createElement("tr");
-      row.innerHTML = "<td>" + escapeHtml(entry.cliente) + "</td>" +
-        "<td>" + escapeHtml(entry.parcelas) + "</td>" +
-        "<td>R$ " + escapeHtml(entry.valor) + "</td>" +
-        "<td>" + escapeHtml(entry.pagamentoLabel) + "</td>";
+      row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
+        "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
+        "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
+        "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>";
       tableBody.appendChild(row);
     }
 
