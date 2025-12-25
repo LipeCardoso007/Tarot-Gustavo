@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Area do administrador</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-panel {
+      max-width: 820px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+
+    .admin-table th,
+    .admin-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(215, 180, 106, 0.18);
+    }
+
+    .admin-table th {
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .admin-table tbody tr:hover {
+      background: rgba(215, 180, 106, 0.06);
+    }
+
+    .admin-form-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .admin-form-row label {
+      flex: 1 1 200px;
+    }
+
+    .admin-form-row select {
+      background: rgba(10, 8, 18, 0.85);
+      border: 1px solid rgba(215, 180, 106, 0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+
+    .admin-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .admin-actions a {
+      text-decoration: none;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="noise"></div>
+
+  <div class="page">
+    <main class="wrap">
+      <div class="top-actions">
+        <a class="cta-btn" href="index.html">Voltar</a>
+      </div>
+
+      <header class="hero">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="brand-sigil"></span>
+        </div>
+        <p class="eyebrow">Administracao</p>
+        <h1>Pagina do administrador</h1>
+        <p class="subtitle">Cadastre clientes e acompanhe parcelas.</p>
+      </header>
+
+      <section class="intent admin-panel">
+        <h3>Adicionar cliente</h3>
+        <form id="adminClientForm" class="modal-form">
+          <div class="admin-form-row">
+            <label>
+              Cliente
+              <input type="text" name="cliente" id="cliente" required />
+            </label>
+            <label>
+              Quantidade de parcelas
+              <input type="number" name="parcelas" id="parcelas" min="1" step="1" required />
+            </label>
+          </div>
+          <div class="admin-form-row">
+            <label>
+              Valor devedor (R$)
+              <input type="number" name="valor" id="valor" min="0" step="0.01" required />
+            </label>
+            <label>
+              Forma de pagamento
+              <select name="pagamento" id="pagamento" required>
+                <option value="">Selecione</option>
+                <option value="pix">Pix</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="debito">Cartao debito</option>
+                <option value="credito">Cartao credito</option>
+              </select>
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button type="submit">Adicionar</button>
+            <button type="reset" class="ghost">Limpar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="offerings-group admin-panel">
+        <h2 class="offerings-title">Clientes cadastrados</h2>
+        <div class="admin-actions">
+          <p class="offerings-desc" style="margin: 0;">Lista gerada localmente no navegador.</p>
+          <button class="ghost" id="clearList" type="button">Limpar lista</button>
+        </div>
+        <div style="margin-top: 16px;">
+          <table class="admin-table" aria-describedby="listaClientes">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Parcelas</th>
+                <th>Valor devedor</th>
+                <th>Pagamento</th>
+              </tr>
+            </thead>
+            <tbody id="clientTableBody">
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>Use esta pagina somente com autorizacao.</p>
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("adminClientForm");
+    const tableBody = document.getElementById("clientTableBody");
+    const clearBtn = document.getElementById("clearList");
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function loadEntries() {
+      const stored = localStorage.getItem("adminClients");
+      const entries = stored ? JSON.parse(stored) : [];
+      tableBody.innerHTML = "";
+      entries.forEach((entry) => {
+        appendRow(entry);
+      });
+    }
+
+    function appendRow(entry) {
+      const row = document.createElement("tr");
+      row.innerHTML = "<td>" + escapeHtml(entry.cliente) + "</td>" +
+        "<td>" + escapeHtml(entry.parcelas) + "</td>" +
+        "<td>R$ " + escapeHtml(entry.valor) + "</td>" +
+        "<td>" + escapeHtml(entry.pagamentoLabel) + "</td>";
+      tableBody.appendChild(row);
+    }
+
+    function saveEntries(entries) {
+      localStorage.setItem("adminClients", JSON.stringify(entries));
+    }
+
+    if (form) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const cliente = document.getElementById("cliente").value.trim();
+        const parcelas = document.getElementById("parcelas").value.trim();
+        const valor = document.getElementById("valor").value.trim();
+        const pagamentoSelect = document.getElementById("pagamento");
+        const pagamento = pagamentoSelect.value;
+        const pagamentoLabel = pagamentoSelect.options[pagamentoSelect.selectedIndex].text;
+
+        if (!cliente || !parcelas || !valor || !pagamento) {
+          return;
+        }
+
+        const stored = localStorage.getItem("adminClients");
+        const entries = stored ? JSON.parse(stored) : [];
+        const entry = { cliente, parcelas, valor, pagamento, pagamentoLabel };
+        entries.push(entry);
+        saveEntries(entries);
+        appendRow(entry);
+        form.reset();
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        saveEntries([]);
+        tableBody.innerHTML = "";
+      });
+    }
+
+    loadEntries();
+  </script>
+</body>
+</html>
