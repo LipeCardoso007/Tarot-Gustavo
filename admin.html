@@ -39,6 +39,34 @@
       background: rgba(215, 180, 106, 0.06);
     }
 
+    .admin-table .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(215, 180, 106, 0.16);
+      color: var(--accent);
+      border: 1px solid rgba(215, 180, 106, 0.3);
+    }
+
+    .admin-table tr.is-paid {
+      background: rgba(215, 180, 106, 0.08);
+    }
+
+    .admin-table tr.is-paid .status-pill {
+      background: rgba(120, 208, 160, 0.2);
+      color: #78d0a0;
+      border-color: rgba(120, 208, 160, 0.4);
+    }
+
+    .mark-paid-btn {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      min-width: 140px;
+    }
+
     .admin-form-row {
       display: flex;
       gap: 14px;
@@ -213,7 +241,6 @@
         <h2 class="offerings-title">Clientes cadastrados</h2>
         <div class="admin-actions">
           <p class="offerings-desc" style="margin: 0;">Lista gerada localmente no navegador.</p>
-          <button class="ghost" id="clearList" type="button">Limpar lista</button>
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table" aria-describedby="listaClientes">
@@ -223,6 +250,8 @@
                 <th>Parcelas</th>
                 <th>Valor devedor</th>
                 <th>Pagamento</th>
+                <th>Status</th>
+                <th>Acoes</th>
               </tr>
             </thead>
             <tbody id="clientTableBody">
@@ -240,8 +269,9 @@
   <script>
     const form = document.getElementById("adminClientForm");
     const tableBody = document.getElementById("clientTableBody");
-    const clearBtn = document.getElementById("clearList");
     const valorInput = document.getElementById("valor");
+    const ADMIN_PASSWORD = "34713471";
+    let entries = [];
 
     function escapeHtml(value) {
       return value
@@ -254,24 +284,38 @@
 
     function loadEntries() {
       const stored = localStorage.getItem("adminClients");
-      const entries = stored ? JSON.parse(stored) : [];
-      tableBody.innerHTML = "";
-      entries.forEach((entry) => {
-        appendRow(entry);
-      });
+      entries = stored ? JSON.parse(stored) : [];
+      renderEntries();
     }
 
     function appendRow(entry) {
       const row = document.createElement("tr");
+      if (entry.pago) {
+        row.classList.add("is-paid");
+      }
+      const statusLabel = entry.pago ? "Finalizado" : "Pendente";
+      const actionLabel = entry.pago ? "Finalizado" : "Marcar como finalizado";
       row.innerHTML = "<td data-label=\"Cliente\">" + escapeHtml(entry.cliente) + "</td>" +
         "<td data-label=\"Parcelas\">" + escapeHtml(entry.parcelas) + "</td>" +
         "<td data-label=\"Valor devedor\">R$ " + escapeHtml(entry.valor) + "</td>" +
-        "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>";
+        "<td data-label=\"Pagamento\">" + escapeHtml(entry.pagamentoLabel) + "</td>" +
+        "<td data-label=\"Status\"><span class=\"status-pill\">" + statusLabel + "</span></td>" +
+        "<td data-label=\"Acoes\">" +
+          "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
+          (entry.pago ? " disabled" : "") + ">" + actionLabel + "</button>" +
+        "</td>";
       tableBody.appendChild(row);
     }
 
     function saveEntries(entries) {
       localStorage.setItem("adminClients", JSON.stringify(entries));
+    }
+
+    function renderEntries() {
+      tableBody.innerHTML = "";
+      entries.forEach((entry) => {
+        appendRow(entry);
+      });
     }
 
     if (form) {
@@ -288,12 +332,18 @@
           return;
         }
 
-        const stored = localStorage.getItem("adminClients");
-        const entries = stored ? JSON.parse(stored) : [];
-        const entry = { cliente, parcelas, valor, pagamento, pagamentoLabel };
+        const entry = {
+          id: Date.now().toString(),
+          cliente,
+          parcelas,
+          valor,
+          pagamento,
+          pagamentoLabel,
+          pago: false
+        };
         entries.push(entry);
         saveEntries(entries);
-        appendRow(entry);
+        renderEntries();
         form.reset();
       });
     }
@@ -314,10 +364,25 @@
       });
     }
 
-    if (clearBtn) {
-      clearBtn.addEventListener("click", () => {
-        saveEntries([]);
-        tableBody.innerHTML = "";
+    if (tableBody) {
+      tableBody.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!target || !target.matches(".mark-paid-btn")) {
+          return;
+        }
+        const id = target.getAttribute("data-id");
+        const password = window.prompt("Digite a senha para confirmar:");
+        if (password !== ADMIN_PASSWORD) {
+          alert("Senha incorreta.");
+          return;
+        }
+        const entry = entries.find((item) => item.id === id);
+        if (!entry || entry.pago) {
+          return;
+        }
+        entry.pago = true;
+        saveEntries(entries);
+        renderEntries();
       });
     }
 
