@@ -259,6 +259,16 @@
       font-weight: 600;
     }
 
+    .parcel-paid {
+      color: #78d0a0;
+      font-weight: 600;
+    }
+
+    .parcel-action-btn {
+      font-size: 0.75rem;
+      padding: 6px 10px;
+    }
+
     @media (max-width: 720px) {
       .admin-table {
         font-size: 0.85rem;
@@ -500,6 +510,10 @@
         if (typeof entry.valorCents !== "number") {
           entry.valorCents = parseMoneyToCents(entry.valor || "");
         }
+        const parcelCount = Math.max(1, parseInt(entry.parcelas, 10) || 1);
+        if (!Array.isArray(entry.parcelPaid) || entry.parcelPaid.length !== parcelCount) {
+          entry.parcelPaid = new Array(parcelCount).fill(false);
+        }
       });
       renderEntries();
     }
@@ -511,6 +525,7 @@
       }
       const statusLabel = entry.pago ? "Pago" : "Pendente";
       const actionLabel = entry.pago ? "Pago" : "Marcar como finalizado";
+      const canFinalize = allParcelsPaid(entry);
       row.innerHTML = "<td data-label=\"Cliente\">" +
         "<button type=\"button\" class=\"client-link\" data-id=\"" + entry.id + "\">" +
         escapeHtml(entry.cliente) + "</button></td>" +
@@ -520,13 +535,17 @@
         "<td data-label=\"Status\"><span class=\"status-pill\">" + statusLabel + "</span></td>" +
         "<td data-label=\"A&#231;&#245;es\">" +
           "<button type=\"button\" class=\"ghost mark-paid-btn\" data-id=\"" + entry.id + "\"" +
-          (entry.pago ? " disabled" : "") + ">" + actionLabel + "</button>" +
+          (entry.pago || !canFinalize ? " disabled" : "") + ">" + actionLabel + "</button>" +
         "</td>";
       tableBody.appendChild(row);
     }
 
     function saveEntries(entries) {
       localStorage.setItem("adminClients", JSON.stringify(entries));
+    }
+
+    function allParcelsPaid(entry) {
+      return Array.isArray(entry.parcelPaid) && entry.parcelPaid.every((paid) => paid === true);
     }
 
     function buildParcelSchedule(totalCents, parcelas) {
@@ -546,7 +565,12 @@
       if (!entry) return;
       const schedule = buildParcelSchedule(entry.valorCents, entry.parcelas);
       const rows = schedule.map((amount, index) => {
-        return "<tr><td>" + (index + 1) + "ª</td><td>R$ " + formatMoneyFromCents(amount) + "</td></tr>";
+        const paid = entry.parcelPaid && entry.parcelPaid[index];
+        const statusCell = paid ? "<span class=\"parcel-paid\">Pago</span>" : "Pendente";
+        const actionBtn = paid
+          ? "<button type=\"button\" class=\"ghost parcel-action-btn\" disabled>Pago</button>"
+          : "<button type=\"button\" class=\"ghost parcel-action-btn\" data-id=\"" + entry.id + "\" data-index=\"" + index + "\">Marcar como paga</button>";
+        return "<tr><td>" + (index + 1) + "ª</td><td>R$ " + formatMoneyFromCents(amount) + "</td><td>" + statusCell + "</td><td>" + actionBtn + "</td></tr>";
       }).join("");
       parcelDetails.innerHTML = "" +
         "<div class=\"parcel-summary\">" +
@@ -555,7 +579,7 @@
           "<p><strong>Parcelas:</strong> " + escapeHtml(entry.parcelas) + "x</p>" +
         "</div>" +
         "<table class=\"parcel-table\">" +
-          "<thead><tr><th>Parcela</th><th>Valor</th></tr></thead>" +
+          "<thead><tr><th>Parcela</th><th>Valor</th><th>Status</th><th>Acoes</th></tr></thead>" +
           "<tbody>" + rows + "</tbody>" +
         "</table>";
       parcelModal.classList.add("open");
@@ -635,6 +659,7 @@
           valorCents: parseMoneyToCents(valor),
           pagamento,
           pagamentoLabel,
+          parcelPaid: new Array(Math.max(1, parseInt(parcelas, 10) || 1)).fill(false),
           pago: false
         };
         entries.push(entry);
@@ -691,6 +716,11 @@
           closePasswordModal();
           return;
         }
+        if (!allParcelsPaid(entry)) {
+          alert("Todas as parcelas precisam estar pagas.");
+          closePasswordModal();
+          return;
+        }
         entry.pago = true;
         saveEntries(entries);
         renderEntries();
@@ -724,6 +754,26 @@
     if (parcelClose) {
       parcelClose.addEventListener("click", () => {
         closeParcelModal();
+      });
+    }
+
+    if (parcelDetails) {
+      parcelDetails.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!target) return;
+        const actionButton = target.closest(".parcel-action-btn");
+        if (!actionButton) return;
+        const entryId = actionButton.getAttribute("data-id");
+        const index = parseInt(actionButton.getAttribute("data-index"), 10);
+        const entry = entries.find((item) => item.id === entryId);
+        if (!entry || Number.isNaN(index)) return;
+        if (!Array.isArray(entry.parcelPaid)) {
+          entry.parcelPaid = [];
+        }
+        entry.parcelPaid[index] = true;
+        saveEntries(entries);
+        renderEntries();
+        openParcelModal(entryId);
       });
     }
 
