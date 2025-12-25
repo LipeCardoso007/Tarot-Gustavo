@@ -221,6 +221,10 @@ if (adminForm) {
     if (!loginValue || !passwordValue) {
       return;
     }
+    if (loginValue !== "gustavo123" || passwordValue !== "34713471") {
+      alert("Login ou senha incorretos.");
+      return;
+    }
     const target = (adminBtn && adminBtn.dataset.target) ? adminBtn.dataset.target : ADMIN_FALLBACK_TARGET;
     closeAdminModal();
     window.location.href = target;
