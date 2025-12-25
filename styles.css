@@ -262,16 +262,20 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 28px;
+  --card-width: clamp(220px, 60vw, 280px);
+  --card-height: clamp(340px, 70vw, 430px);
 }
 
 .card-carousel {
   position: relative;
   width: 100%;
-  height: clamp(360px, 70vw, 460px);
+  height: var(--card-height);
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .carousel-track {
@@ -279,6 +283,7 @@ h1 {
   width: 100%;
   height: 100%;
   touch-action: pan-y;
+  display: block;
 }
 
 .carousel-track.dragging .card {
@@ -289,7 +294,8 @@ h1 {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(calc(-50% + var(--tx, 0px)), -50%) scale(var(--scale, 1));
+  transform: translate(-50%, -50%) translateX(var(--tx, 0px)) scale(var(--scale, 1));
+  transform-origin: center center;
   transition: transform 0.35s ease, opacity 0.35s ease;
   will-change: transform, opacity;
 }
@@ -316,8 +322,8 @@ h1 {
 }
 
 .card {
-  width: clamp(220px, 60vw, 280px);
-  height: clamp(340px, 70vw, 430px);
+  width: var(--card-width);
+  height: var(--card-height);
   position: relative;
   perspective: 1200px;
   cursor: pointer;
@@ -329,6 +335,7 @@ h1 {
 .card:hover .card-face {
   box-shadow: 0 26px 50px rgba(0, 0, 0, 0.45);
 }
+
 
 .card-face {
   position: absolute;
@@ -417,6 +424,7 @@ h1 {
   gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 18px;
 }
 
 .draw-select {
@@ -789,7 +797,7 @@ button.ghost {
     transition: transform 0.3s ease;
   }
 
-  .card:hover {
+  .card:not(.carousel-card):hover {
     transform: rotateX(4deg) rotateY(-4deg);
   }
 }

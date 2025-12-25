@@ -97,6 +97,8 @@ let dragStartX = 0;
 let dragOffset = 0;
 let isDragging = false;
 let cardSpacing = 200;
+let rafDragId = 0;
+let pendingOffset = 0;
 
 const cardTemplate = card;
 if (cardTemplate) {
@@ -181,6 +183,10 @@ function resetCard(cardEl) {
 function updateCardSpacing() {
   if (!cardNodes.length) return;
   const rect = cardNodes[0].getBoundingClientRect();
+  if (!rect.width || rect.width < 50) {
+    cardSpacing = 200;
+    return;
+  }
   cardSpacing = rect.width * 0.7;
 }
 
@@ -196,20 +202,28 @@ function updateMoreIndicator() {
   }
 }
 
-function layoutCarousel(offset = 0) {
+function layoutCarousel(offset = 0, skipMeasure = false) {
   if (!cardNodes.length) return;
-  updateCardSpacing();
+  if (!skipMeasure) {
+    updateCardSpacing();
+  }
   const spacing = cardSpacing || 200;
-  const dragUnits = offset / spacing;
+  const clampedOffset = Math.max(-spacing * 0.35, Math.min(spacing * 0.35, offset));
+  const dragUnits = Number.isFinite(clampedOffset / spacing) ? clampedOffset / spacing : 0;
+  if (!Number.isFinite(centerIndex)) {
+    centerIndex = 0;
+  }
   cardNodes.forEach((node, index) => {
     const distance = index - centerIndex - dragUnits;
     const absDistance = Math.abs(distance);
-    const scale = Math.max(0.72, 1 - absDistance * 0.2);
-    const translate = (index - centerIndex) * spacing + offset;
+    const scaleValue = 1 - absDistance * 0.2;
+    const scale = Math.max(0.72, Number.isFinite(scaleValue) ? scaleValue : 0.72);
+    const translate = (index - centerIndex) * spacing + clampedOffset;
     node.style.setProperty("--tx", `${translate}px`);
     node.style.setProperty("--scale", scale.toFixed(3));
-    node.style.opacity = absDistance > 1.6 ? "0" : "1";
-    node.style.pointerEvents = absDistance > 1.1 ? "none" : "auto";
+    const opacityValue = absDistance > 2.2 ? 0 : absDistance > 1.6 ? 0.35 : 1;
+    node.style.opacity = String(opacityValue);
+    node.style.pointerEvents = absDistance > 1.6 ? "none" : "auto";
     node.style.zIndex = String(100 - Math.round(absDistance * 10));
     node.classList.toggle("is-center", absDistance < 0.01);
   });
@@ -257,8 +271,11 @@ function renderCarousel() {
     return cardNode;
   });
   centerIndex = Math.min(centerIndex, cardNodes.length - 1);
-  layoutCarousel(0);
-  updateMoreIndicator();
+  requestAnimationFrame(() => {
+    updateCardSpacing();
+    layoutCarousel(0);
+    updateMoreIndicator();
+  });
 }
 
 resetBtn.addEventListener("click", () => {
@@ -290,6 +307,7 @@ if (carouselTrack) {
     isDragging = true;
     dragStartX = event.clientX;
     dragOffset = 0;
+    carouselTrack.style.cursor = "grabbing";
     carouselTrack.classList.add("dragging");
     carouselTrack.setPointerCapture(event.pointerId);
   });
@@ -297,7 +315,13 @@ if (carouselTrack) {
   carouselTrack.addEventListener("pointermove", (event) => {
     if (!isDragging) return;
     dragOffset = event.clientX - dragStartX;
-    layoutCarousel(dragOffset);
+    pendingOffset = dragOffset;
+    if (!rafDragId) {
+      rafDragId = requestAnimationFrame(() => {
+        layoutCarousel(pendingOffset, true);
+        rafDragId = 0;
+      });
+    }
   });
 
   const endDrag = (event) => {
@@ -311,7 +335,9 @@ if (carouselTrack) {
       centerIndex = Math.max(0, Math.min(centerIndex, cardNodes.length - 1));
     }
     dragOffset = 0;
+    pendingOffset = 0;
     layoutCarousel(0);
+    carouselTrack.style.cursor = "";
   };
 
   carouselTrack.addEventListener("pointerup", endDrag);
